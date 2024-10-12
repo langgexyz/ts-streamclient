@@ -3,7 +3,7 @@ import {Duration, Second} from "ts-xutils"
 import {Protocol} from "./protocol"
 
 
-export class BrowserWebSocket extends AbstractWebSocketDriver {
+export class BrowserWs extends AbstractWebSocketDriver {
 	private websocket: WebSocket;
 
 	close(code?: number, reason?: string): void {
@@ -37,7 +37,7 @@ export class BrowserWebSocket extends AbstractWebSocketDriver {
 export function withBrowser(url: string, connectionTimeout: Duration = 30*Second): ()=>Protocol {
 	return ()=>{
 		return new WebSocketProtocol(url, (url:string)=>{
-			return new BrowserWebSocket(url)
+			return new BrowserWs(url)
 		}, connectionTimeout)
 	}
 }

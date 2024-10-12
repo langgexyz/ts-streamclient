@@ -9,6 +9,6 @@ export type {
 
 export {ElseErr, ElseConnErr, ConnTimeoutErr, ElseTimeoutErr, type StmError} from "./src/error"
 
-export {withBrowser, BrowserWebSocket} from "./src/browserwebsocket"
+export {withBrowser, BrowserWs} from "./src/browserws"
 
 export type {Protocol} from "./src/protocol"
