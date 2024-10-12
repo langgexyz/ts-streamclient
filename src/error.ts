@@ -1,48 +1,61 @@
 
-export interface StmError extends Error {
+export interface StmErrorBase extends Error {
 	isConnErr: boolean
 	isTimeoutErr: boolean
+	get toConnErr(): StmError
 }
 
-export class ConnTimeoutErr implements StmError {
+export class ConnTimeoutErr implements StmErrorBase {
 	message: string
 	name: string = "ConnTimeoutErr"
 	isConnErr: boolean = true
 	isTimeoutErr: boolean = true
+	get toConnErr(): StmError {
+		return this
+	}
 
 	constructor(m: string) {
 		this.message = m
 	}
 }
 
-export class ElseConnErr implements StmError {
+export class ElseConnErr implements StmErrorBase {
 	message: string
 	name: string = "ElseConnErr"
 	isConnErr: boolean = true
 	isTimeoutErr: boolean = false
+	get toConnErr(): StmError {
+		return this
+	}
 
 	constructor(m: string) {
 		this.message = m
 	}
 }
 
-export class ElseTimeoutErr implements StmError {
+export class ElseTimeoutErr implements StmErrorBase {
 	message: string
 	name: string = "ElseTimeoutErr"
 	isConnErr: boolean = false
 	isTimeoutErr: boolean = true
+	get toConnErr(): StmError {
+		return new ElseConnErr(this.message)
+	}
 
 	constructor(m: string) {
 		this.message = m
 	}
 }
 
-export class ElseErr implements StmError {
+export class ElseErr implements StmErrorBase {
 	message: string
 	name: string = "ElseErr"
 	cause: Error|null
 	isConnErr: boolean = false
 	isTimeoutErr: boolean = false
+	get toConnErr(): StmError {
+		return new ElseConnErr(this.message)
+	}
 
 	constructor(m: string, cause: Error|null = null) {
 		if (cause == null) {
@@ -54,4 +67,6 @@ export class ElseErr implements StmError {
 		this.cause = cause
 	}
 }
+
+export type StmError = ElseErr | ElseTimeoutErr | ElseConnErr | ConnTimeoutErr
 
