@@ -4,14 +4,16 @@
   "description": "typescript stream client",
   "author": "xpwu",
   "dependencies": {
-    "ts-xutils": "../ts-xutils",
-    "ts-concurrency": "../ts-concurrency"
+    "ts-concurrency": "../ts-concurrency",
+    "ts-xutils": "../ts-xutils"
   },
   "devDependencies": {
     "@types/jest": "28.1.3",
     "jest": "28.1.1",
     "ts-jest": "28.0.5",
-    "typescript": "4.7.4"
+    "typescript": "4.7.4",
+    "ts-json": "https://github.com/xpwu/ts-json#semver:^0.1.1",
+		"ws": "^8.18.0"
   },
   "scripts": {
     "tsc": "tsc",
