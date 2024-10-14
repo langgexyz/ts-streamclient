@@ -1,11 +1,15 @@
 
-export interface StmErrorBase extends Error {
-	isConnErr: boolean
-	isTimeoutErr: boolean
-	get toConnErr(): StmError
+export abstract class StmErrorBase extends Error {
+	abstract isConnErr: boolean
+	abstract isTimeoutErr: boolean
+	abstract get toConnErr(): StmError
+
+	toString(): string {
+		return this.message
+	}
 }
 
-export class ConnTimeoutErr implements StmErrorBase {
+export class ConnTimeoutErr extends StmErrorBase {
 	message: string
 	name: string = "ConnTimeoutErr"
 	isConnErr: boolean = true
@@ -15,11 +19,12 @@ export class ConnTimeoutErr implements StmErrorBase {
 	}
 
 	constructor(m: string) {
+		super()
 		this.message = m
 	}
 }
 
-export class ElseConnErr implements StmErrorBase {
+export class ElseConnErr extends StmErrorBase {
 	message: string
 	name: string = "ElseConnErr"
 	isConnErr: boolean = true
@@ -29,11 +34,12 @@ export class ElseConnErr implements StmErrorBase {
 	}
 
 	constructor(m: string) {
+		super()
 		this.message = m
 	}
 }
 
-export class ElseTimeoutErr implements StmErrorBase {
+export class ElseTimeoutErr extends StmErrorBase {
 	message: string
 	name: string = "ElseTimeoutErr"
 	isConnErr: boolean = false
@@ -43,11 +49,12 @@ export class ElseTimeoutErr implements StmErrorBase {
 	}
 
 	constructor(m: string) {
+		super()
 		this.message = m
 	}
 }
 
-export class ElseErr implements StmErrorBase {
+export class ElseErr extends StmErrorBase {
 	message: string
 	name: string = "ElseErr"
 	cause: Error|null
@@ -58,6 +65,7 @@ export class ElseErr implements StmErrorBase {
 	}
 
 	constructor(m: string, cause: Error|null = null) {
+		super()
 		if (cause == null) {
 			this.message = m
 		} else {

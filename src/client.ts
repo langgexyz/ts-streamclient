@@ -51,8 +51,8 @@ export class Client {
 		})
 	}
 
-  public async send(data: ArrayBuffer|string, headers: Map<string, string>
-										, timeout: Duration = 30*Second): Promise<[Result, Error | null]> {
+  public async Send(data: ArrayBuffer|string, headers: Map<string, string>
+										, timeout: Duration = 30*Second): Promise<[Result, StmError | null]> {
 		let sflag = UniqFlag()
 		let utf8Data = new Utf8(data)
 
@@ -118,16 +118,16 @@ export class Client {
 		this.protocolCreator = creator
 	}
 
-  public async recover(): Promise<StmError|null> {
+  public async Recover(): Promise<StmError|null> {
     return await (await this.net()).connect()
   }
 
 	private static reqidKey: string = "X-Req-Id"
 	public async SendWithReqId(data: ArrayBuffer|string, headers: Map<string, string>
-		, timeout: Duration = 30*Second): Promise<[Result, Error | null]> {
+		, timeout: Duration = 30*Second): Promise<[Result, StmError | null]> {
 		headers.set(Client.reqidKey, UniqFlag())
 
-		return await this.send(data, headers, timeout)
+		return await this.Send(data, headers, timeout)
 	}
 }
 
