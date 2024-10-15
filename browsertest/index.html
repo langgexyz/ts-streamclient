@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>test stream</title>
+
+  <script src="../jquery.min.js"></script>
+  <style>
+    .flex-container {
+      display: flex; /* 使用Flexbox布局 */
+    }
+    button {
+      margin-right: 10px; /* 按钮之间的间隔 */
+    }
+  </style>
+<!--  <script>-->
+<!--    function send() {-->
+<!--      console.log("send")-->
+<!--    }-->
+<!--  </script>-->
+</head>
+<body>
+  <h1>test stream client for browser</h1>
+  <div>
+    <div class="flex-container">
+      <button id="return" type="button">test return</button>
+      <button id="push" type="button">test push</button>
+      <button id="close" type="button">test server close</button>
+    </div>
+    <br>
+
+    ws(s): <label for="wss"></label><input type="text" id="wss" placeholder="host:port"> <br>
+    <br>
+    headers: <br>
+    key: <label for="key1"></label><input type="text" id="key1">  <br>
+    value: <label for="value1"></label><input type="text" id="value1"> <br><br>
+    key: <label for="key2"></label><input type="text" id="key2">  <br>
+    value: <label for="value2"></label><input type="text" id="value2"> <br><br>
+    key: <label for="key3"></label><input type="text" id="key3">  <br>
+    value: <label for="value3"></label><input type="text" id="value3"> <br><br>
+
+    post data: <br>
+    <label for="post"></label><textarea rows="10" cols="100" id="post"></textarea>
+    <br>
+    <button id="send" type="button">发送</button>
+    <br>
+
+    <div id="output">
+
+    </div>
+
+  </div>
+
+</body>
+</html>
