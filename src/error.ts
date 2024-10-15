@@ -1,5 +1,5 @@
 
-export abstract class StmErrorBase extends Error {
+abstract class StmErrorBase extends Error {
 	abstract isConnErr: boolean
 	abstract isTimeoutErr: boolean
 	abstract get toConnErr(): StmError
@@ -78,3 +78,6 @@ export class ElseErr extends StmErrorBase {
 
 export type StmError = ElseErr | ElseTimeoutErr | ElseConnErr | ConnTimeoutErr
 
+export function isStmError(arg: any): arg is StmError {
+	return arg instanceof StmErrorBase
+}

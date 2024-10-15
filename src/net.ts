@@ -261,7 +261,7 @@ export class Net {
 			this.state = new Connected
 			this.handshake = handshake
 			this.allRequests.permits = this.handshake.MaxConcurrent
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.connect:handshake`, this.handshake.toString())
+			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.connect:handshake`, `${this.handshake}`)
 
 			return null
 		})
@@ -272,7 +272,8 @@ export class Net {
 						 , timeout: Duration = 30*Second): Promise<[ArrayBuffer, StmError|null]> {
 		// 预判断
 		let ret = await this.connLocker.withLock<StmError|null> (async ()=>{
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send:state`, `${this.state} --- ${headers}`)
+			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send:state`
+				, `${this.state} --- headers:${formatMap(headers)}`)
 			if (this.state.isInvalidated()) {
 				return this.state.err.toConnErr
 			}
@@ -290,12 +291,12 @@ export class Net {
 		let [request, err] = Request.New(reqId, data, headers)
 		if (err) {
 			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send:FakeHttpRequest`
-				, `${headers} (reqId:${reqId}) --- error: ${err}`)
+				, `headers:${formatMap(headers)} (reqId:${reqId}) --- error: ${err}`)
 			return [new ArrayBuffer(0), err]
 		}
 		if (request.loadLen > this.handshake.MaxBytes) {
 			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send:MaxBytes`
-				, `${headers} (reqId:${reqId}) --- error: data is Too Large`)
+				, `headers:${formatMap(headers)} (reqId:${reqId}) --- error: data is Too Large`)
 			return [new ArrayBuffer(0)
 				, new ElseErr(`request.size(${request.loadLen}) > MaxBytes(${this.handshake.MaxBytes})`)]
 		}
@@ -304,7 +305,7 @@ export class Net {
 		// 因为网络异步的原因，客户端并发数不可能与服务器完全一样，所以这里主要是协助服务器做预控流，按照客户端的逻辑处理即可
 
 		this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:request`
-			, `${headers} (reqId:${reqId})`)
+			, `headers:${formatMap(headers)} (reqId:${reqId})`)
 
 		let ch = await this.allRequests.Add(reqId)
 		let ret2 = await withTimeout<[Response, StmError|null]>(timeout, async ()=>{
@@ -324,7 +325,7 @@ export class Net {
 
 		if (ret2 instanceof Timeout) {
 			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:Timeout`
-				, `${headers} (reqId:${reqId}) --- timeout(>${timeout/Second}s)`)
+				, `headers:${formatMap(headers)} (reqId:${reqId}) --- timeout(>${timeout/Second}s)`)
 			return [new ArrayBuffer(0), new ElseErr(`request timeout(${timeout/Second}s)`)]
 		}
 
@@ -333,7 +334,7 @@ export class Net {
 		}
 
 		this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:response`
-			, `${headers} (reqId:${reqId}) --- ${ret2[0].status}`)
+			, `headers:${formatMap(headers)} (reqId:${reqId}) --- ${ret2[0].status}`)
 
 		if (ret2[0].status != ResStatus.OK) {
 			return [new ArrayBuffer(0), new ElseErr(new Utf8(ret2[0].data).toString())]
@@ -351,4 +352,13 @@ export class Net {
 			await this.proto.Close()
 		}
 	}
+}
+
+export function formatMap(map: Map<string, string>): string {
+	let ret = new Array<string>()
+	map.forEach((v, k) => {
+		ret.push(k + ":" + v)
+	})
+
+	return "{" + ret.join(";") + "}"
 }

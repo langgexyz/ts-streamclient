@@ -1,5 +1,5 @@
 
-import {Net} from "./net"
+import {formatMap, Net} from "./net"
 import {Utf8, Logger, UniqFlag, ConsoleLogger, Duration, Second} from "ts-xutils"
 import {StmError} from "./error"
 import {Protocol} from "./protocol"
@@ -24,10 +24,11 @@ export class Client {
 
 	private flag = UniqFlag()
 	private netMutex: Mutex = new Mutex()
-  private net_: Net = this.newNet()
+  private net_: Net
 
   constructor(private protocolCreator: ()=>Protocol, private logger: Logger = new ConsoleLogger()) {
     logger.Info(`Client[${this.flag}].new`, `flag=${this.flag}`)
+		this.net_ = this.newNet()
   }
 
 	private newNet(): Net {
@@ -57,7 +58,7 @@ export class Client {
 		let utf8Data = new Utf8(data)
 
 		this.logger.Info(`Client[${this.flag}].Send[${sflag}]:start`
-			, `${headers}, request utf8 size = ${utf8Data.byteLength}`)
+			, `headers:${formatMap(headers)}, request utf8 size = ${utf8Data.byteLength}`)
 
 		let net = await this.net()
 		let err = await net.connect()
@@ -68,12 +69,12 @@ export class Client {
 
 		let [ret, err2] = await net.send(utf8Data.raw.buffer, headers, timeout)
 		if (err2 == null) {
-			this.logger.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}:end`
+			this.logger.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
 				, `response size = ${ret.byteLength}`)
 			return [new Result(ret), err2]
 		}
 		if (!err2.isConnErr) {
-			this.logger.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}:error`
+			this.logger.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):error`
 				, `request error = ${err2}`)
 			return [new Result(ret), err2]
 		}
@@ -130,4 +131,5 @@ export class Client {
 		return await this.Send(data, headers, timeout)
 	}
 }
+
 

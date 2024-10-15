@@ -1,9 +1,9 @@
 import {Client} from "../src/client"
-import {withBrowser} from "../src/browserws"
 import {testUrl} from "./local.properties"
 import {Json, JsonKey} from "ts-json"
 import {asyncExe, Channel, withTimeout} from "ts-concurrency"
 import {Second} from "ts-xutils"
+import {withNode} from "./nodews"
 
 
 class ReturnReq {
@@ -32,7 +32,7 @@ class PushReq {
 }
 
 function client(): Client {
-	return new Client(withBrowser(testUrl))
+	return new Client(withNode(testUrl))
 }
 
 test("sendOne", async ()=>{
@@ -46,6 +46,7 @@ test("sendOne", async ()=>{
 	let res = new ReturnRes()
 	new Json().fromJson(ret.toString(), res)
 	expect(res.ret).toEqual(req.data)
+	await c.Close()
 })
 
 test("sendMega", async ()=>{
@@ -56,6 +57,7 @@ test("sendMega", async ()=>{
 	expect(err != null).toBeTruthy()
 	let ret = (err!.message == "response is too large") || (err!.message == "507 Insufficient Storage")
 	expect(ret).toBeTruthy()
+	await c.Close()
 })
 
 test("sendMore", async ()=>{
@@ -70,9 +72,9 @@ test("sendMore", async ()=>{
 		"xpwu.kt-streamclient"
 	]
 
-	let sender = new Array<()=>Promise<void>>()
+	let sender = new Array<Promise<void>>()
 	cases.forEach((value)=>{
-		sender.push(async ()=>{
+		sender.push((async ()=>{
 			let req = new ReturnReq()
 			req.data = value
 			let [ret, err] = await c.SendWithReqId(new Json().toJson(req), headers)
@@ -80,10 +82,11 @@ test("sendMore", async ()=>{
 			let res = new ReturnRes()
 			new Json().fromJson(ret.toString(), res)
 			expect(res.ret).toEqual(req.data)
-		})
+		})())
 	})
 
 	await Promise.all(sender)
+	await c.Close()
 })
 
 test("sendClose", async ()=>{
@@ -99,7 +102,7 @@ test("sendClose", async ()=>{
 	asyncExe(async ()=>{
 		let [ret, err] = await c.SendWithReqId("{}", headers)
 		expect(err).toBeNull()
-		expect(ret).toEqual("{}")
+		expect(ret.toString()).toEqual("{}")
 	})
 
 	let rt = await withTimeout(5*Second, async ()=>{
@@ -107,6 +110,7 @@ test("sendClose", async ()=>{
 	})
 
 	expect(rt).toBeTruthy()
+	await c.Close()
 })
 
 test("sendPush", async ()=>{
@@ -127,7 +131,7 @@ test("sendPush", async ()=>{
 	headers.set("api", "PushLt20Times")
 	let [ret, err] = await c.SendWithReqId(new Json().toJson(req), headers)
 	expect(err).toBeNull()
-	expect(ret).toEqual("{}")
+	expect(ret.toString()).toEqual("{}")
 
 	let rt = await withTimeout(30*Second, async ()=>{
 		while (true) {
@@ -145,4 +149,5 @@ test("sendPush", async ()=>{
 	})
 
 	expect(rt).toBeTruthy()
+	await c.Close()
 })

@@ -9,11 +9,12 @@
   },
   "devDependencies": {
     "@types/jest": "28.1.3",
+    "@types/ws": "^8.5.12",
     "jest": "28.1.1",
     "ts-jest": "28.0.5",
     "typescript": "4.7.4",
     "ts-json": "https://github.com/xpwu/ts-json#semver:^0.1.1",
-		"ws": "^8.18.0"
+    "ws": "^8.18.0"
   },
   "scripts": {
     "tsc": "tsc",
@@ -36,7 +37,8 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "testRegex": "test/(.+)\\.test\\.(tsx?)$"
+    "testRegex": "test/(.+)\\.test\\.(tsx?)$",
+		"transformIgnorePatterns": ["/node_modules/(?!(ts-json|ts-xutils|ts-concurrency)/)"]
   },
   "miniprogram": "."
 }

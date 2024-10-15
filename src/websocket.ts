@@ -1,5 +1,5 @@
 import {Handshake, Protocol} from "./protocol"
-import {ConnTimeoutErr, ElseConnErr, StmError} from "./error"
+import {ConnTimeoutErr, ElseConnErr, isStmError, StmError} from "./error"
 import {ConsoleLogger, Duration, Logger, Second, UniqFlag} from "ts-xutils"
 import {asyncExe, Channel, SendChannel, Timeout, withTimeout} from "ts-concurrency"
 
@@ -72,19 +72,36 @@ export class WebSocketProtocol implements Protocol {
 	async Close(): Promise<void> {
 		this.closeBySelf = true
 		this.driver.close()
+		this.driver = new dummyWs()
 	}
 
-	createDriver(handshakeChannel: SendChannel<ArrayBuffer>) {
-		let waitingHandshake = true
+	createDriver(handshakeChannel: SendChannel<ArrayBuffer|StmError>) {
+		let isConnecting = true
 		this.driver = this.driverCreator(this.url)
 		this.driver.onclose = (ev)=>{
+			if (isConnecting) {
+				isConnecting = false
+				asyncExe(async ()=>{
+					this.logger.Debug(`WebSocket[${this.flag}].onclose`, `${ev.code} ${ev.reason}`)
+					await handshakeChannel.Send(new ElseConnErr(`closed: ${ev.code} ${ev.reason}`))
+				})
+				return
+			}
 			if (!this.closeBySelf) {
 				asyncExe(async ()=>{
-					await this.onError(new ElseConnErr("closed: " + ev.reason))
+					await this.onError(new ElseConnErr(`closed: ${ev.code} ${ev.reason}`))
 				})
 			}
 		}
 		this.driver.onerror = (ev)=>{
+			if (isConnecting) {
+				isConnecting = false
+				asyncExe(async ()=>{
+					this.logger.Debug(`WebSocket[${this.flag}].onerror`, ev.errMsg)
+					await handshakeChannel.Send(new ElseConnErr(ev.errMsg))
+				})
+				return
+			}
 			if (!this.closeBySelf) {
 				asyncExe(async ()=>{
 					this.logger.Debug(`WebSocket[${this.flag}].onerror`, `${ev.errMsg}`)
@@ -103,8 +120,8 @@ export class WebSocketProtocol implements Protocol {
 
 			let data:ArrayBuffer = ev.data
 
-			if (waitingHandshake) {
-				waitingHandshake = false
+			if (isConnecting) {
+				isConnecting = false
 				asyncExe(async ()=>{
 					await handshakeChannel.Send(data)
 				})
@@ -125,15 +142,19 @@ export class WebSocketProtocol implements Protocol {
 		this.logger.Debug(`WebSocket[${this.flag}].Connect:start`
 			, `${this.url}#connectTimeout=${this.connectTimeout}`)
 
-		let handshakeChannel = new Channel<ArrayBuffer>(1)
+		let handshakeChannel = new Channel<ArrayBuffer|StmError>(1)
 		this.createDriver(handshakeChannel)
 
-		let handshake = await withTimeout<ArrayBuffer|null>(this.connectTimeout, async ()=>{
+		let handshake = await withTimeout<ArrayBuffer|StmError|null>(this.connectTimeout, async ()=>{
 			return await handshakeChannel.Receive()
 		})
 		if (handshake instanceof Timeout) {
 			this.logger.Debug(`WebSocket[${(this.flag)}].Connect:error`, "timeout")
 			return [new Handshake(), new ConnTimeoutErr("timeout")]
+		}
+		if (isStmError(handshake)) {
+			this.logger.Debug(`WebSocket[${(this.flag)}].Connect:error`, `${handshake}`)
+			return [new Handshake(), handshake]
 		}
 		if (handshake == null) {
 			this.logger.Debug(`WebSocket[${(this.flag)}].Connect:error`, "channel closed")
