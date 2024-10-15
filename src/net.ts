@@ -360,5 +360,5 @@ export function formatMap(map: Map<string, string>): string {
 		ret.push(k + ":" + v)
 	})
 
-	return "{" + ret.join(";") + "}"
+	return "{" + ret.join(", ") + "}"
 }

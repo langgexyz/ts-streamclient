@@ -54,7 +54,7 @@ export class Client {
 
   public async Send(data: ArrayBuffer|string, headers: Map<string, string>
 										, timeout: Duration = 30*Second): Promise<[Result, StmError | null]> {
-		let sflag = UniqFlag()
+		let sflag = headers.get(Client.reqidKey) ?? UniqFlag()
 		let utf8Data = new Utf8(data)
 
 		this.logger.Info(`Client[${this.flag}].Send[${sflag}]:start`

@@ -89,7 +89,8 @@ export class WebSocketProtocol implements Protocol {
 			}
 			if (!this.closeBySelf) {
 				asyncExe(async ()=>{
-					await this.onError(new ElseConnErr(`closed: ${ev.code} ${ev.reason}`))
+					this.logger.Debug(`WebSocket[${this.flag}].onclose`, `closed by peer: ${ev.code} ${ev.reason}`)
+					await this.onError(new ElseConnErr(`closed by peer: ${ev.code} ${ev.reason}`))
 				})
 			}
 		}

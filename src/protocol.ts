@@ -1,5 +1,5 @@
 
-import {Logger, Duration, assert, Second} from "ts-xutils"
+import {Logger, Duration, assert, Second, formatDuration} from "ts-xutils"
 import {StmError} from "./error"
 
 /**
@@ -40,7 +40,7 @@ export class Handshake {
 	ConnectId: string = "---no_connectId---"
 
 	toString(): string {
-		return `handshake info:{ConnectId: ${this.ConnectId}, MaxConcurrent: ${this.MaxConcurrent}, HearBeatTime: ${this.HearBeatTime}, MaxBytes/frame: ${this.MaxBytes}, FrameTimeout: ${this.FrameTimeout}`
+		return `handshake info:{ConnectId: ${this.ConnectId}, MaxConcurrent: ${this.MaxConcurrent}, HearBeatTime: ${formatDuration(this.HearBeatTime)}, MaxBytes/frame: ${this.MaxBytes}, FrameTimeout: ${formatDuration(this.FrameTimeout)}}`
 	}
 
 	/**
