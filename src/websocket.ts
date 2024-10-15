@@ -44,7 +44,7 @@ class dummyWs extends AbstractWebSocketDriver {
 }
 
 export class WebSocketProtocol implements Protocol {
-	logger_: Logger = new ConsoleLogger()
+	logger_: Logger = ConsoleLogger
 	onMessage: (data:ArrayBuffer)=>Promise<void> = async ()=>{}
 	onError: (err: StmError)=>Promise<void> = async ()=>{}
 	closeBySelf: boolean = false
@@ -59,7 +59,7 @@ export class WebSocketProtocol implements Protocol {
 	}
 	set logger(l) {
 		this.logger_ = l
-		this.logger_.Debug(`WebSocket[${this.flag}].new`, `flag=${this.flag}`)
+		this.logger_.w.debug(this.logger_.f.Debug(`WebSocket[${this.flag}].new`, `flag=${this.flag}`))
 	}
 
 	constructor(private readonly url: string, private driverCreator: (url:string)=>WebSocketDriver
@@ -82,14 +82,15 @@ export class WebSocketProtocol implements Protocol {
 			if (isConnecting) {
 				isConnecting = false
 				asyncExe(async ()=>{
-					this.logger.Debug(`WebSocket[${this.flag}].onclose`, `${ev.code} ${ev.reason}`)
+					this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}].onclose`, `${ev.code} ${ev.reason}`))
 					await handshakeChannel.Send(new ElseConnErr(`closed: ${ev.code} ${ev.reason}`))
 				})
 				return
 			}
 			if (!this.closeBySelf) {
 				asyncExe(async ()=>{
-					this.logger.Debug(`WebSocket[${this.flag}].onclose`, `closed by peer: ${ev.code} ${ev.reason}`)
+					this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}].onclose`
+						, `closed by peer: ${ev.code} ${ev.reason}`))
 					await this.onError(new ElseConnErr(`closed by peer: ${ev.code} ${ev.reason}`))
 				})
 			}
@@ -98,21 +99,21 @@ export class WebSocketProtocol implements Protocol {
 			if (isConnecting) {
 				isConnecting = false
 				asyncExe(async ()=>{
-					this.logger.Debug(`WebSocket[${this.flag}].onerror`, ev.errMsg)
+					this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}].onerror`, ev.errMsg))
 					await handshakeChannel.Send(new ElseConnErr(ev.errMsg))
 				})
 				return
 			}
 			if (!this.closeBySelf) {
 				asyncExe(async ()=>{
-					this.logger.Debug(`WebSocket[${this.flag}].onerror`, `${ev.errMsg}`)
+					this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}].onerror`, `${ev.errMsg}`))
 					await this.onError(new ElseConnErr(ev.errMsg))
 				})
 			}
 		}
 		this.driver.onmessage = (ev)=>{
 			if (typeof ev.data == "string") {
-				this.logger.Debug(`WebSocket[${this.flag}].onmessage:error`, "message type error")
+				this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}].onmessage:error`, "message type error"))
 				asyncExe(async ()=>{
 					await this.onError(new ElseConnErr("message type error"))
 				})
@@ -130,18 +131,19 @@ export class WebSocketProtocol implements Protocol {
 			}
 
 			asyncExe(async ()=>{
-				this.logger.Debug(`WebSocket[${this.flag}]<${this.connectID}>.read`, `read one message`)
+				this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}]<${this.connectID}>.read`
+					, `read one message`))
 				await this.onMessage(data)
 			})
 		}
 		this.driver.onopen = ()=>{
-			this.logger.Debug(`WebSocket[${this.flag}].onopen`, `waiting for handshake`)
+			this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}].onopen`, `waiting for handshake`))
 		}
 	}
 
 	async Connect(): Promise<[Handshake, (StmError | null)]> {
-		this.logger.Debug(`WebSocket[${this.flag}].Connect:start`
-			, `${this.url}#connectTimeout=${this.connectTimeout}`)
+		this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}].Connect:start`
+			, `${this.url}#connectTimeout=${this.connectTimeout}`))
 
 		let handshakeChannel = new Channel<ArrayBuffer|StmError>(1)
 		this.createDriver(handshakeChannel)
@@ -150,33 +152,34 @@ export class WebSocketProtocol implements Protocol {
 			return await handshakeChannel.Receive()
 		})
 		if (handshake instanceof Timeout) {
-			this.logger.Debug(`WebSocket[${(this.flag)}].Connect:error`, "timeout")
+			this.logger.w.debug(this.logger.f.Debug(`WebSocket[${(this.flag)}].Connect:error`, "timeout"))
 			return [new Handshake(), new ConnTimeoutErr("timeout")]
 		}
 		if (isStmError(handshake)) {
-			this.logger.Debug(`WebSocket[${(this.flag)}].Connect:error`, `${handshake}`)
+			this.logger.w.debug(this.logger.f.Debug(`WebSocket[${(this.flag)}].Connect:error`, `${handshake}`))
 			return [new Handshake(), handshake]
 		}
 		if (handshake == null) {
-			this.logger.Debug(`WebSocket[${(this.flag)}].Connect:error`, "channel closed")
+			this.logger.w.debug(this.logger.f.Debug(`WebSocket[${(this.flag)}].Connect:error`, "channel closed"))
 			return [new Handshake(), new ElseConnErr("channel closed")]
 		}
 
 		if (handshake.byteLength != Handshake.StreamLen) {
-			this.logger.Debug(`WebSocket[${(this.flag)}].Connect:error`
-				, `handshake(${handshake.byteLength}) size error`)
+			this.logger.w.debug(this.logger.f.Debug(`WebSocket[${(this.flag)}].Connect:error`
+				, `handshake(${handshake.byteLength}) size error`))
 			return [new Handshake(), new ElseConnErr(`handshake(${handshake.byteLength}) size error`)]
 		}
 		this.handshake = Handshake.Parse(handshake)
-		this.logger.Debug(`WebSocket[${(this.flag)}]<${(this.connectID)}>.Connect:end`
-			, `connectID = ${(this.connectID)}`)
+		this.logger.w.debug(this.logger.f.Debug(`WebSocket[${(this.flag)}]<${(this.connectID)}>.Connect:end`
+			, `connectID = ${(this.connectID)}`))
 
 		return [this.handshake, null]
 	}
 
 	async Send(data: ArrayBuffer): Promise<StmError | null> {
 		this.driver.send(data)
-		this.logger.Debug(`WebSocket[${this.flag}]<${this.connectID}>.Send`, `frameBytes = ${data.byteLength}`)
+		this.logger.w.debug(this.logger.f.Debug(`WebSocket[${this.flag}]<${this.connectID}>.Send`
+			, `frameBytes = ${data.byteLength}`))
 		return null
 	}
 }

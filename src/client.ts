@@ -26,17 +26,17 @@ export class Client {
 	private netMutex: Mutex = new Mutex()
   private net_: Net
 
-  constructor(private protocolCreator: ()=>Protocol, private logger: Logger = new ConsoleLogger()) {
-    logger.Info(`Client[${this.flag}].new`, `flag=${this.flag}`)
+  constructor(private protocolCreator: ()=>Protocol, private logger: Logger = ConsoleLogger) {
+    logger.w.info(logger.f.Info(`Client[${this.flag}].new`, `flag=${this.flag}`))
 		this.net_ = this.newNet()
   }
 
 	private newNet(): Net {
 		return new Net(this.logger, this.protocolCreator, async (err: StmError)=>{
-			this.logger.Warning(`Client[${this.flag}].onPeerClosed`, `reason: ${err}`)
+			this.logger.w.warn(this.logger.f.Warn(`Client[${this.flag}].onPeerClosed`, `reason: ${err}`))
 			await this.onPeerClosed(err)
 		}, async (data: ArrayBuffer)=>{
-			this.logger.Info(`Client[${this.flag}].onPush`, `size: ${data.byteLength}`)
+			this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].onPush`, `size: ${data.byteLength}`))
 			await this.onPush(new Result(data))
 		})
 	}
@@ -57,46 +57,47 @@ export class Client {
 		let sflag = headers.get(Client.reqidKey) ?? UniqFlag()
 		let utf8Data = new Utf8(data)
 
-		this.logger.Info(`Client[${this.flag}].Send[${sflag}]:start`
-			, `headers:${formatMap(headers)}, request utf8 size = ${utf8Data.byteLength}`)
+		this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}]:start`
+			, `headers:${formatMap(headers)}, request utf8 size = ${utf8Data.byteLength}`))
 
 		let net = await this.net()
 		let err = await net.connect()
 		if (err) {
-			this.logger.Error(`Client[${this.flag}].Send[${sflag}]:error`, `connect error: ${err}`)
+			this.logger.w.error(this.logger.f.Error(`Client[${this.flag}].Send[${sflag}]:error`
+				, `connect error: ${err}`))
 			return [new Result(), err]
 		}
 
 		let [ret, err2] = await net.send(utf8Data.raw.buffer, headers, timeout)
 		if (err2 == null) {
-			this.logger.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
-				, `response size = ${ret.byteLength}`)
+			this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
+				, `response size = ${ret.byteLength}`))
 			return [new Result(ret), err2]
 		}
 		if (!err2.isConnErr) {
-			this.logger.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):error`
-				, `request error = ${err2}`)
+			this.logger.w.error(this.logger.f.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):error`
+				, `request error = ${err2}`))
 			return [new Result(ret), err2]
 		}
 
 		// sending --- conn error:  retry
-		this.logger.Debug(`Client[${this.flag}].Send[${sflag}]:retry`, `retry-1`)
+		this.logger.w.debug(this.logger.f.Debug(`Client[${this.flag}].Send[${sflag}]:retry`, `retry-1`))
 
 		net = await this.net()
 
 		err = await net.connect()
 		if (err) {
-			this.logger.Error(`Client[${this.flag}].Send[${sflag}]:error`, `connect error: ${err}`)
+			this.logger.w.error(this.logger.f.Error(`Client[${this.flag}].Send[${sflag}]:error`, `connect error: ${err}`))
 			return [new Result(), err]
 		}
 
 		[ret, err2] = await net.send(utf8Data.raw.buffer, headers, timeout)
 		if (err2 == null) {
-			this.logger.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
-				, `response size = ${ret.byteLength}`)
+			this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
+				, `response size = ${ret.byteLength}`))
 		} else {
-			this.logger.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):error`
-				, `request error = ${err2}`)
+			this.logger.w.error(this.logger.f.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):error`
+				, `request error = ${err2}`))
 		}
 
 		return [new Result(ret), err2]
@@ -110,7 +111,7 @@ export class Client {
 	 */
 	public async Close() {
 		await this.netMutex.withLock<void>(async ()=>{
-			this.logger.Info(`Client[${this.flag}].close`, "closed by self")
+			this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].close`, "closed by self"))
 			await this.net_.close()
 		})
 	}

@@ -151,7 +151,7 @@ export class Net {
 	constructor(private logger: Logger, protoCreator: ()=>Protocol
 							, private onPeerClosed: (err: StmError)=>Promise<void>
 							, private onPush: (data: ArrayBuffer)=>Promise<void>) {
-		logger.Debug(`Net[${this.flag}].new`, `flag=${this.flag}`)
+		logger.w.debug(logger.f.Debug(`Net[${this.flag}].new`, `flag=${this.flag}`))
 
 		this.proto = protoCreator()
 		this.proto.logger = logger
@@ -167,7 +167,7 @@ export class Net {
 				return old
 			}
 			this.state = new Invalidated(err)
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.Invalidated`, `${err}`)
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.Invalidated`, `${err}`))
 
 			return old
 		})
@@ -181,7 +181,8 @@ export class Net {
 		let old = await this.closeAndOldState(err)
 		if (old instanceof Connected) {
 			asyncExe(async ()=>{
-				this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.close`, "closed, become invalidated")
+				this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.close`
+					, "closed, become invalidated"))
 				await this.onPeerClosed(err)
 				await this.proto.Close()
 			})
@@ -191,7 +192,8 @@ export class Net {
 	async onMessage(msg: ArrayBuffer) {
 		let [response, err] = Response.Parse(msg)
 		if (err) {
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:parse`, `error --- ${err}`)
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:parse`
+				, `error --- ${err}`))
 			await this.onError(err)
 			return
 		}
@@ -199,7 +201,8 @@ export class Net {
 		if (response.isPush) {
 			let [pushAck, err] = response.newPushAck()
 			if (err) {
-				this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:newPushAck`, `error --- ${err}`)
+				this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:newPushAck`
+					, `error --- ${err}`))
 				await this.onError(err)
 				return
 			}
@@ -212,10 +215,11 @@ export class Net {
 			asyncExe(async ()=>{
 				let err = await this.proto.Send(pushAck)
 				if (err) {
-					this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:pushAck`, `error --- ${err}`)
+					this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:pushAck`
+						, `error --- ${err}`))
 				}
-				this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:pushAck`
-					, `pushID = ${response.pushId}`)
+				this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:pushAck`
+					, `pushID = ${response.pushId}`))
 			})
 
 			return
@@ -223,14 +227,15 @@ export class Net {
 
 		let ch = await this.allRequests.Remove(response.reqId)
 		if (ch == null) {
-			this.logger.Warning(`Net[${this.flag}]<${this.connectID}>.onMessage:NotFind`
-				, `warning: not find request for reqId(${response.reqId}`)
+			this.logger.w.debug(this.logger.f.Warn(`Net[${this.flag}]<${this.connectID}>.onMessage:NotFind`
+				, `warning: not find request for reqId(${response.reqId}`))
 			return
 		}
 
 		let ch1 = ch
 
-		this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:response`, `reqId=${response.reqId}`)
+		this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.onMessage:response`
+			, `reqId=${response.reqId}`))
 		asyncExe(async ()=>{
 			await ch1.Send([response, null])
 		})
@@ -240,20 +245,21 @@ export class Net {
 	async connect(): Promise<StmError|null> {
 		return await this.connLocker.withLock<StmError|null>(async ()=>{
 			if (this.state instanceof Connected) {
-				this.logger.Debug(`Net[${this.flag}].connect:Connected`, `connID=${this.connectID}`)
+				this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}].connect:Connected`, `connID=${this.connectID}`))
 				return null
 			}
 			if (this.state.isInvalidated()) {
-				this.logger.Debug(`Net[${this.flag}].connect<${this.connectID}>:Invalidated`, `${this.state.err}`)
+				this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}].connect<${this.connectID}>:Invalidated`
+					, `${this.state.err}`))
 				return this.state.err
 			}
 
 			// state.NotConnect
-			this.logger.Debug(`Net[${this.flag}].connect:NotConnect`, "will connect")
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}].connect:NotConnect`, "will connect"))
 			let [handshake, err] = await this.proto.Connect()
 			if (err != null) {
 				this.state = new Invalidated(err)
-				this.logger.Debug(`Net[${this.flag}].connect:error`, `${err}`)
+				this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}].connect:error`, `${err}`))
 				return err
 			}
 
@@ -261,7 +267,8 @@ export class Net {
 			this.state = new Connected
 			this.handshake = handshake
 			this.allRequests.permits = this.handshake.MaxConcurrent
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.connect:handshake`, `${this.handshake}`)
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.connect:handshake`
+				, `${this.handshake}`))
 
 			return null
 		})
@@ -272,8 +279,8 @@ export class Net {
 						 , timeout: Duration = 30*Second): Promise<[ArrayBuffer, StmError|null]> {
 		// 预判断
 		let ret = await this.connLocker.withLock<StmError|null> (async ()=>{
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send:state`
-				, `${this.state} --- headers:${formatMap(headers)}`)
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.send:state`
+				, `${this.state} --- headers:${formatMap(headers)}`))
 			if (this.state.isInvalidated()) {
 				return this.state.err.toConnErr
 			}
@@ -290,13 +297,13 @@ export class Net {
 		let reqId = this.reqId.get()
 		let [request, err] = Request.New(reqId, data, headers)
 		if (err) {
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send:FakeHttpRequest`
-				, `headers:${formatMap(headers)} (reqId:${reqId}) --- error: ${err}`)
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.send:FakeHttpRequest`
+				, `headers:${formatMap(headers)} (reqId:${reqId}) --- error: ${err}`))
 			return [new ArrayBuffer(0), err]
 		}
 		if (request.loadLen > this.handshake.MaxBytes) {
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send:MaxBytes`
-				, `headers:${formatMap(headers)} (reqId:${reqId}) --- error: data is Too Large`)
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.send:MaxBytes`
+				, `headers:${formatMap(headers)} (reqId:${reqId}) --- error: data is Too Large`))
 			return [new ArrayBuffer(0)
 				, new ElseErr(`request.size(${request.loadLen}) > MaxBytes(${this.handshake.MaxBytes})`)]
 		}
@@ -304,8 +311,8 @@ export class Net {
 		// 在客户端超时也认为是一个请求结束，但是真正的请求并没有结束，所以在服务器看来，仍然占用服务器的一个并发数
 		// 因为网络异步的原因，客户端并发数不可能与服务器完全一样，所以这里主要是协助服务器做预控流，按照客户端的逻辑处理即可
 
-		this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:request`
-			, `headers:${formatMap(headers)} (reqId:${reqId})`)
+		this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:request`
+			, `headers:${formatMap(headers)} (reqId:${reqId})`))
 
 		let ch = await this.allRequests.Add(reqId)
 		let ret2 = await withTimeout<[Response, StmError|null]>(timeout, async ()=>{
@@ -324,8 +331,8 @@ export class Net {
 		})
 
 		if (ret2 instanceof Timeout) {
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:Timeout`
-				, `headers:${formatMap(headers)} (reqId:${reqId}) --- timeout(>${timeout/Second}s)`)
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:Timeout`
+				, `headers:${formatMap(headers)} (reqId:${reqId}) --- timeout(>${timeout/Second}s)`))
 			return [new ArrayBuffer(0), new ElseErr(`request timeout(${timeout/Second}s)`)]
 		}
 
@@ -333,8 +340,8 @@ export class Net {
 			return [new ArrayBuffer(0), ret2[1]]
 		}
 
-		this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:response`
-			, `headers:${formatMap(headers)} (reqId:${reqId}) --- ${ret2[0].status}`)
+		this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.send[${reqId}]:response`
+			, `headers:${formatMap(headers)} (reqId:${reqId}) --- ${ret2[0].status}`))
 
 		if (ret2[0].status != ResStatus.OK) {
 			return [new ArrayBuffer(0), new ElseErr(new Utf8(ret2[0].data).toString())]
@@ -348,7 +355,8 @@ export class Net {
 	async close() {
 		let old = await this.closeAndOldState(new ElseErr("closed by self"))
 		if (old instanceof Connected) {
-			this.logger.Debug(`Net[${this.flag}]<${this.connectID}>.close`, "closed, become invalidated")
+			this.logger.w.debug(this.logger.f.Debug(`Net[${this.flag}]<${this.connectID}>.close`
+				, "closed, become invalidated"))
 			await this.proto.Close()
 		}
 	}
