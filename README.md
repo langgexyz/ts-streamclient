@@ -6,7 +6,7 @@ stream client 2.0 for web，与 [go-stream](https://github.com/xpwu/go-stream) �
 ## 0、代码库的引用
 ```
 "dependencies": {
-    "ts-streamclient": "https://github.com/xpwu/ts-streamclient#semver:^2.x.x"
+    "ts-streamclient": "https://github.com/langgexyz/ts-streamclient#semver:^2.x.x"
   },
 ```
 
