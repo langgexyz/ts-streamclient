@@ -1,6 +1,6 @@
 import {Client} from "../src/client"
 import {testUrl} from "./local.properties"
-import {Json, JsonKey} from "ts-json"
+import {plainToClass, classToPlain, Expose} from "class-transformer"
 import {asyncExe, Channel, withTimeout} from "ts-concurrency"
 import {Second} from "ts-xutils"
 import {withNode} from "./nodews"
@@ -18,7 +18,7 @@ class PushReq {
 	times: number = 0
 	prefix: string = ""
 
-	@JsonKey("-")
+	@Exclude()
 	result: Set<string>|null = null
 	check(str: string): boolean {
 		if (this.result == null) {
@@ -41,10 +41,9 @@ test("sendOne", async ()=>{
 	req.data = "dkjfeoxeoxoeyionxa;;'a"
 	let headers = new Map<string, string>()
 	headers.set("api", "return")
-	let [ret, err] = await c.SendWithReqId(new Json().toJson(req), headers)
+	let [ret, err] = await c.SendWithReqId(JSON.stringify(classToPlain(req)), headers)
 	expect(err).toBeNull()
-	let res = new ReturnRes()
-	new Json().fromJson(ret.toString(), res)
+	let res = plainToClass(ReturnRes, JSON.parse(ret.toString()))
 	expect(res.ret).toEqual(req.data)
 	await c.Close()
 })
@@ -77,10 +76,9 @@ test("sendMore", async ()=>{
 		sender.push((async ()=>{
 			let req = new ReturnReq()
 			req.data = value
-			let [ret, err] = await c.SendWithReqId(new Json().toJson(req), headers)
+			let [ret, err] = await c.SendWithReqId(JSON.stringify(classToPlain(req)), headers)
 			expect(err).toBeNull()
-			let res = new ReturnRes()
-			new Json().fromJson(ret.toString(), res)
+			let res = plainToClass(ReturnRes, JSON.parse(ret.toString()))
 			expect(res.ret).toEqual(req.data)
 		})())
 	})
@@ -129,7 +127,7 @@ test("sendPush", async ()=>{
 
 	let headers = new Map<string, string>()
 	headers.set("api", "PushLt20Times")
-	let [ret, err] = await c.SendWithReqId(new Json().toJson(req), headers)
+	let [ret, err] = await c.SendWithReqId(JSON.stringify(classToPlain(req)), headers)
 	expect(err).toBeNull()
 	expect(ret.toString()).toEqual("{}")
 

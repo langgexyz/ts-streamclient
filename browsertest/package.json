@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "description": "stream client browser test",
   "dependencies": {
-    "ts-streamclient": "https://github.com/langgexyz/ts-streamclient#semver:^2.0.0",
-    "ts-xutils": "https://github.com/langgexyz/ts-xutils#semver:^0.4.0",
-    "ts-json": "https://github.com/langgexyz/ts-json#semver:^0.2.0"
+    "ts-streamclient": "https://github.com/langgexyz/ts-streamclient#semver:^1.0.0",
+    "ts-xutils": "https://github.com/langgexyz/ts-xutils#semver:^1.0.0",
+    "class-transformer": "^0.5.1"
   },
   "devDependencies": {
     "@types/jquery": "^3.5.14",

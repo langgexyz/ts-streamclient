@@ -1,7 +1,7 @@
 
 import {Client, withBrowser} from "ts-streamclient"
 import {UniqFlag} from "ts-xutils"
-import {Json} from "ts-json"
+import {plainToClass, classToPlain} from "class-transformer"
 
 let client: Client|null = null
 let url = ""
@@ -146,7 +146,7 @@ $("#return").on("click", async ()=>{
 	$("#value1").attr("value", "return")
 	let req = new ReturnReq()
 	req.data = UniqFlag()
-	$("#post").val(new Json().toJson(req))
+	$("#post").val(JSON.stringify(classToPlain(req)))
 })
 
 
@@ -161,7 +161,7 @@ $("#push").on("click", async ()=>{
 	let req = new PushReq()
 	req.times = 10
 	req.prefix = "this is a push test"
-	$("#post").val(new Json().toJson(req))
+	$("#post").val(JSON.stringify(classToPlain(req)))
 })
 
 $("#close").on("click", async ()=>{
