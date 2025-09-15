@@ -6,8 +6,10 @@
 
     "isolatedModules": true,
 
-    "outDir": "dist",
+    "outDir": "dist/esm",
     "sourceMap": true,
+    "declaration": false,
+    "declarationMap": false,
     "noEmit": false,
 
     "lib": ["es2015", "es2017", "es2016", "dom"],

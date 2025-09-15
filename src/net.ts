@@ -67,7 +67,7 @@ interface StateBase {
 }
 
 class NotConnect implements StateBase {
-	isEqual(other: StateBase): boolean {
+	isEqual(other: StateBase): this is Invalidated {
 		return other instanceof NotConnect
 	}
 
@@ -81,7 +81,7 @@ class NotConnect implements StateBase {
 }
 
 class Connected implements StateBase {
-	isEqual(other: StateBase): boolean {
+	isEqual(other: StateBase): this is Invalidated {
 		return other instanceof Connected
 	}
 
@@ -96,7 +96,7 @@ class Connected implements StateBase {
 
 class Invalidated implements StateBase {
 	public err: StmError
-	isEqual(other: StateBase): boolean {
+	isEqual(other: StateBase): this is Invalidated {
 		return other instanceof Invalidated
 	}
 

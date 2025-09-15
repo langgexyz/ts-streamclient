@@ -68,7 +68,7 @@ export class Client {
 			return [new Result(), err]
 		}
 
-		let [ret, err2] = await net.send(utf8Data.raw.buffer, headers, timeout)
+		let [ret, err2] = await net.send(utf8Data.raw.buffer as ArrayBuffer, headers, timeout)
 		if (err2 == null) {
 			this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
 				, `response size = ${ret.byteLength}`))
@@ -91,7 +91,7 @@ export class Client {
 			return [new Result(), err]
 		}
 
-		[ret, err2] = await net.send(utf8Data.raw.buffer, headers, timeout)
+		[ret, err2] = await net.send(utf8Data.raw.buffer as ArrayBuffer, headers, timeout)
 		if (err2 == null) {
 			this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
 				, `response size = ${ret.byteLength}`))
