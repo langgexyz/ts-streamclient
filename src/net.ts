@@ -62,12 +62,12 @@ class SyncAllRequest {
 
 interface StateBase {
 	toString():string
-	isEqual(other: StateBase): this is Invalidated
+	isEqual(other: StateBase): boolean
 	isInvalidated(): boolean
 }
 
 class NotConnect implements StateBase {
-	isEqual(other: StateBase): this is Invalidated {
+	isEqual(other: StateBase): boolean {
 		return other instanceof NotConnect
 	}
 
@@ -81,7 +81,7 @@ class NotConnect implements StateBase {
 }
 
 class Connected implements StateBase {
-	isEqual(other: StateBase): this is Invalidated {
+	isEqual(other: StateBase): boolean {
 		return other instanceof Connected
 	}
 
@@ -96,7 +96,7 @@ class Connected implements StateBase {
 
 class Invalidated implements StateBase {
 	public err: StmError
-	isEqual(other: StateBase): this is Invalidated {
+	isEqual(other: StateBase): boolean {
 		return other instanceof Invalidated
 	}
 

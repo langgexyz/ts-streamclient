@@ -1,0 +1,80 @@
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "ts-xutils"], factory);
+    }
+})(function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Handshake = void 0;
+    const ts_xutils_1 = require("ts-xutils");
+    /**
+     *
+     * 上层的调用 Protocol 及响应 Delegate 的时序逻辑：
+     *
+     *                             +-----------------------------------+
+     *                             |                                   |
+     *                             |                                   v
+     *     connect{1} --+--(true)--+---[.async]--->send{n} ------> close{1}
+     *                  |          |                                   ^
+     *           (false)|          |-------> onMessage                 |
+     *                  |          |             |                     |
+     *        <Unit>----+          |          (error) --- [.async] --->|
+     *                             |                                   |
+     *                             +--------> onError --- [.async] ----+
+     *
+     *
+     *    Protocol.connect() 与 Protocol.close() 上层使用方确保只会调用 1 次
+     *    Protocol.connect() 失败，不会请求/响应任何接口
+     *    Protocol.send() 会异步并发地调用 n 次，Protocol.send() 执行的时长不会让调用方挂起等待
+     *    在上层明确调用 Protocol.close() 后，才不会调用 Protocol.send()
+     *    Delegate.onMessage() 失败 及 Delegate.onError() 会异步调用 Protocol.close()
+     *
+     *    连接成功后，任何不能继续通信的情况都以 Delegate.onError() 返回
+     *    Delegate.close() 的调用不触发 Delegate.onError()
+     *    Delegate.connect() 的错误不触发 Delegate.onError()
+     *    Delegate.send() 仅返回本次 Delegate.send() 的错误，
+     *       不是底层通信的错误，底层通信的错误通过 Delegate.onError() 返回
+     *
+     */
+    class Handshake {
+        constructor() {
+            this.HearBeatTime = Number.MAX_SAFE_INTEGER;
+            this.FrameTimeout = Number.MAX_SAFE_INTEGER; // 同一帧里面的数据超时
+            this.MaxConcurrent = Number.MAX_SAFE_INTEGER; // 一个连接上的最大并发
+            this.MaxBytes = 10 * 1024 * 1024; // 一帧数据的最大字节数
+            this.ConnectId = "---no_connectId---";
+        }
+        toString() {
+            return `handshake info:{ConnectId: ${this.ConnectId}, MaxConcurrent: ${this.MaxConcurrent}, HearBeatTime: ${(0, ts_xutils_1.formatDuration)(this.HearBeatTime)}, MaxBytes/frame: ${this.MaxBytes}, FrameTimeout: ${(0, ts_xutils_1.formatDuration)(this.FrameTimeout)}}`;
+        }
+        static Parse(buffer) {
+            (0, ts_xutils_1.assert)(buffer.byteLength >= Handshake.StreamLen);
+            let ret = new Handshake();
+            let view = new DataView(buffer);
+            ret.HearBeatTime = view.getUint16(0) * ts_xutils_1.Second;
+            ret.FrameTimeout = view.getUint8(2) * ts_xutils_1.Second;
+            ret.MaxConcurrent = view.getUint8(3);
+            ret.MaxBytes = view.getUint32(4);
+            ret.ConnectId = ("00000000" + view.getUint32(8).toString(16)).slice(-8) +
+                ("00000000" + view.getUint32(12).toString(16)).slice(-8);
+            return ret;
+        }
+    }
+    exports.Handshake = Handshake;
+    /**
+     * ```
+     * HeartBeat_s | FrameTimeout_s | MaxConcurrent | MaxBytes | connect id
+     * HeartBeat_s: 2 bytes, net order
+     * FrameTimeout_s: 1 byte
+     * MaxConcurrent: 1 byte
+     * MaxBytes: 4 bytes, net order
+     * connect id: 8 bytes, net order
+     * ```
+     */
+    Handshake.StreamLen = 2 + 1 + 1 + 4 + 8;
+});
+//# sourceMappingURL=protocol.js.map
