@@ -1,6 +1,6 @@
 {
   "name": "ts-streamclient",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "typescript stream client",
   "author": "xpwu",
   "main": "dist/cjs/index.js",
