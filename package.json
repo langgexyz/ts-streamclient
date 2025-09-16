@@ -1,4 +1,16 @@
 {
+  "_ai_rules": {
+    "github_dependencies": {
+      "langgexyz/*": {
+        "version_pattern": "semver:\\^[1-9][0-9]*\\.[0-9]+\\.[0-9]+$",
+        "forbidden_patterns": [
+          "semver:\\^[0-9]+\\.[0-9]+\\.[0-9]+-[a-zA-Z]",
+          "semver:\\^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+"
+        ],
+        "description": "package.json 中只能使用稳定版本范围，如 ^1.0.0，禁止直接写预发布版本如 ^1.0.0-alpha.4"
+      }
+    }
+  },
   "name": "ts-streamclient",
   "version": "1.0.0-alpha.10",
   "description": "typescript stream client",
@@ -8,8 +20,8 @@
   "types": "dist/types/index.d.ts",
   "browser": "dist/umd/index.js",
   "dependencies": {
-    "ts-concurrency": "github:langgexyz/ts-concurrency#semver:^1.0.0-alpha.9",
-    "ts-xutils": "github:langgexyz/ts-xutils#semver:^1.0.0-alpha.12"
+    "ts-concurrency": "github:langgexyz/ts-concurrency#semver:^1.0.0",
+    "ts-xutils": "github:langgexyz/ts-xutils#semver:^1.0.0"
   },
   "devDependencies": {
     "@types/jest": "28.1.3",
