@@ -61,7 +61,7 @@ class Client {
             var _a;
             let sflag = (_a = headers.get(Client.reqidKey)) !== null && _a !== void 0 ? _a : (0, ts_xutils_1.UniqFlag)();
             let utf8Data = new ts_xutils_1.Utf8(data);
-            this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}]:start`, `headers:${(0, net_1.formatMap)(headers)}, request utf8 size = ${utf8Data.byteLength}`));
+            this.logger.w.debug(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}]:start`, `headers:${(0, net_1.formatMap)(headers)}, request utf8 size = ${utf8Data.byteLength}`));
             let net = yield this.net();
             let err = yield net.connect();
             if (err) {
@@ -87,7 +87,7 @@ class Client {
             }
             [ret, err2] = yield net.send(utf8Data.raw.buffer, headers, timeout);
             if (err2 == null) {
-                this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`, `response size = ${ret.byteLength}`));
+                this.logger.w.debug(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`, `response size = ${ret.byteLength}`));
             }
             else {
                 this.logger.w.error(this.logger.f.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):error`, `request error = ${err2}`));

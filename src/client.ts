@@ -57,7 +57,7 @@ export class Client {
 		let sflag = headers.get(Client.reqidKey) ?? UniqFlag()
 		let utf8Data = new Utf8(data)
 
-		this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}]:start`
+		this.logger.w.debug(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}]:start`
 			, `headers:${formatMap(headers)}, request utf8 size = ${utf8Data.byteLength}`))
 
 		let net = await this.net()
@@ -93,7 +93,7 @@ export class Client {
 
 		[ret, err2] = await net.send(utf8Data.raw.buffer as ArrayBuffer, headers, timeout)
 		if (err2 == null) {
-			this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
+			this.logger.w.debug(this.logger.f.Info(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):end`
 				, `response size = ${ret.byteLength}`))
 		} else {
 			this.logger.w.error(this.logger.f.Error(`Client[${this.flag}].Send[${sflag}](connID=${net.connectID}):error`
