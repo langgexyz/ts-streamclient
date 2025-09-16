@@ -12,7 +12,7 @@
     }
   },
   "name": "ts-streamclient",
-  "version": "1.0.0-alpha.10",
+  "version": "1.0.0",
   "description": "typescript stream client",
   "author": "xpwu",
   "main": "dist/cjs/index.js",
