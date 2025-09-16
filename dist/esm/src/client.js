@@ -37,7 +37,7 @@ export class Client {
             this.logger.w.warn(this.logger.f.Warn(`Client[${this.flag}].onPeerClosed`, `reason: ${err}`));
             yield this.onPeerClosed(err);
         }), (data) => __awaiter(this, void 0, void 0, function* () {
-            this.logger.w.info(this.logger.f.Info(`Client[${this.flag}].onPush`, `size: ${data.byteLength}`));
+            this.logger.w.debug(this.logger.f.Debug(`Client[${this.flag}].onPush`, `size: ${data.byteLength}`));
             yield this.onPush(new Result(data));
         }));
     }
