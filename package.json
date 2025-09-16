@@ -1,6 +1,6 @@
 {
   "name": "ts-streamclient",
-  "version": "1.0.0-alpha.8",
+  "version": "1.0.0-alpha.9",
   "description": "typescript stream client",
   "author": "xpwu",
   "main": "dist/cjs/index.js",
@@ -8,8 +8,8 @@
   "types": "dist/types/index.d.ts",
   "browser": "dist/umd/index.js",
   "dependencies": {
-    "ts-concurrency": "file:../ts-concurrency",
-    "ts-xutils": "github:langgexyz/ts-xutils#semver:^1.0.0-alpha.10"
+    "ts-concurrency": "github:langgexyz/ts-concurrency#semver:^1.0.0",
+    "ts-xutils": "github:langgexyz/ts-xutils#semver:^1.0.0"
   },
   "devDependencies": {
     "@types/jest": "28.1.3",
